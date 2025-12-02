@@ -28,6 +28,7 @@
       <div class="dash-lang">English</div>
       <div class="dash-user">
         <span id="dash-username">Trader</span>
+        <a class="btn btn-outline btn-sm" href="profile.html">Profile</a>
         <button id="dash-logout" class="btn btn-outline btn-sm">Log out</button>
       </div>
     </div>
@@ -42,27 +43,27 @@
         </div>
         <div class="dash-balance-meta">
           <span class="dash-pill">Demo Mode</span>
-          <span class="dash-pill" id="dash-last-updated">Updating…</span>
+          <span class="dash-pill" id="dash-last-updated">Updating...</span>
         </div>
       </div>
       <div class="dash-actions">
-        <button class="dash-action">
+        <button class="dash-action" data-action="Buy">
           <div class="dash-action-icon visa">💳</div>
           <span>Buy</span>
         </button>
-        <button class="dash-action">
+        <button class="dash-action" data-action="Withdraw">
           <div class="dash-action-icon withdraw">⬆️</div>
           <span>Withdraw</span>
         </button>
-        <button class="dash-action">
+        <button class="dash-action" data-action="Deposit">
           <div class="dash-action-icon deposit">⬇️</div>
           <span>Deposit</span>
         </button>
-        <button class="dash-action">
+        <button class="dash-action" data-action="Swap">
           <div class="dash-action-icon swap">↔️</div>
           <span>Swap</span>
         </button>
-        <button class="dash-action">
+        <button class="dash-action" data-action="Link Wallet">
           <div class="dash-action-icon link">🔗</div>
           <span>Link Wallet</span>
         </button>
@@ -78,6 +79,22 @@
       </div>
     </section>
   </main>
+
+  <div class="dash-action-overlay"></div>
+  <div class="dash-action-modal" id="dash-action-modal">
+    <div class="dash-action-header">
+      <h3 id="dash-action-title">Select Asset</h3>
+      <button class="dash-action-close" aria-label="Close">×</button>
+    </div>
+    <div class="dash-action-body">
+      <div class="dash-action-list" id="dash-action-list"></div>
+      <div class="dash-action-form">
+        <label for="dash-action-amount">Amount</label>
+        <input id="dash-action-amount" type="number" min="0" step="0.00000001" placeholder="0.00" />
+        <button id="dash-action-confirm" class="btn btn-primary" type="button" style="width: 100%; margin-top: 0.5rem;">Confirm</button>
+      </div>
+    </div>
+  </div>
 
   <script src="dashboard.js"></script>
 </body>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Profile · Quantum Ledger Network</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>
+    window.API_BASE = "https://quantum-ledger-org.onrender.com";
+  </script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="dash-body">
+  <header class="dash-appbar">
+    <div class="dash-brand">
+      <div class="dash-brand-mark">QLN</div>
+      <div class="dash-brand-text">
+        <div class="dash-brand-title">Quantum Ledger</div>
+        <div class="dash-brand-sub">Profile</div>
+      </div>
+    </div>
+    <div class="dash-appbar-actions">
+      <a class="btn btn-outline btn-sm" href="dashboard.html">← Back</a>
+    </div>
+  </header>
+
+  <main class="dash-main">
+    <section class="profile-card">
+      <div class="profile-side">
+        <div class="profile-avatar">👤</div>
+        <div class="profile-name" id="profile-name">Your Name</div>
+        <div class="profile-email" id="profile-email">you@example.com</div>
+        <button class="btn btn-primary btn-sm" type="button">Verify email</button>
+      </div>
+      <div class="profile-form">
+        <h3>KYC Details</h3>
+        <div class="profile-form-grid">
+          <div class="form-group">
+            <label for="kyc-first">First Name *</label>
+            <input id="kyc-first" type="text" placeholder="Enter first name" />
+          </div>
+          <div class="form-group">
+            <label for="kyc-last">Last Name *</label>
+            <input id="kyc-last" type="text" placeholder="Enter last name" />
+          </div>
+          <div class="form-group">
+            <label for="kyc-phone">Mobile Number *</label>
+            <input id="kyc-phone" type="tel" placeholder="Enter phone number" />
+          </div>
+          <div class="form-group">
+            <label for="kyc-address">Address *</label>
+            <input id="kyc-address" type="text" placeholder="Enter address" />
+          </div>
+          <div class="form-group">
+            <label for="kyc-country">Country *</label>
+            <input id="kyc-country" type="text" placeholder="Enter country" />
+          </div>
+        </div>
+        <button class="btn btn-primary" type="button" style="margin-top: 0.75rem;">Save (demo)</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Demo: fill profile details from stored user
+    (function () {
+      try {
+        const raw = localStorage.getItem("qlnCurrentUser");
+        const user = raw ? JSON.parse(raw) : null;
+        if (user) {
+          const nameEl = document.getElementById("profile-name");
+          const emailEl = document.getElementById("profile-email");
+          if (nameEl) nameEl.textContent = user.name || "Trader";
+          if (emailEl) emailEl.textContent = user.email || "";
+        }
+      } catch (err) {
+        console.error("Error reading stored user", err);
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -2,7 +2,7 @@ const API_BASE =
   window.API_BASE ||
   "https://quantum-ledger-org.onrender.com"; // backend base URL (prod); override by setting window.API_BASE before script loads
 const COINGECKO_URL =
-  "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin,ethereum,tether,solana&order=market_cap_desc&per_page=4&page=1&sparkline=false";
+  "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=false";
 
 // Your demo portfolio (amounts you hold)
 const DEMO_HOLDINGS = [
@@ -11,6 +11,8 @@ const DEMO_HOLDINGS = [
   { id: "tether", symbol: "USDT", label: "Tether (USDT)", amount: 3000 },
   { id: "solana", symbol: "SOL", label: "Solana (SOL)", amount: 45 },
 ];
+
+let cachedMarket = [];
 
 function formatCurrency(value) {
   return `$${value.toLocaleString("en-US", {
@@ -116,6 +118,7 @@ async function loadPortfolioData() {
       totalValue,
       topAsset,
       lastUpdated: new Date(),
+      market: marketData,
     };
   } catch (err) {
     console.error("Error loading portfolio data:", err);
@@ -143,6 +146,7 @@ async function loadPortfolioData() {
       totalValue,
       topAsset,
       lastUpdated: new Date(),
+      market: [],
     };
   }
 }
@@ -170,8 +174,15 @@ function populateDashboard(user, portfolio) {
     totalBalanceEl.textContent = formatCurrency(portfolio.totalValue || 0);
   }
 
+  cachedMarket = portfolio.market || [];
+
   if (holdingsGrid) {
     holdingsGrid.innerHTML = "";
+    const holdingsMap = {};
+    portfolio.holdings.forEach((h) => {
+      holdingsMap[h.id] = h;
+    });
+
     const colorMap = {
       BTC: "#f7931a",
       ETH: "#6b7280",
@@ -179,36 +190,46 @@ function populateDashboard(user, portfolio) {
       SOL: "#14b8a6",
     };
 
-    portfolio.holdings.forEach((h) => {
+    const dataToRender = cachedMarket.length ? cachedMarket : portfolio.holdings;
+
+    dataToRender.forEach((coin) => {
+      const symbol = coin.symbol?.toUpperCase() || "";
+      const bg = colorMap[symbol] || "#0ea5e9";
+      const holding = holdingsMap[coin.id];
+      const amount = holding ? holding.amount : 0;
+      const price = coin.current_price || holding?.price || 0;
+      const value = price * amount;
+      const change = coin.price_change_percentage_24h || holding?.change24h || 0;
+      const changeClass = change >= 0 ? "pos" : "neg";
+      const changeLabel =
+        change || change === 0 ? `${change.toFixed(2)}%` : "N/A";
+
       const card = document.createElement("div");
       card.className = "dash-asset-card";
-
-      const changeClass = h.change24h >= 0 ? "pos" : "neg";
-      const changeLabel = `${h.change24h.toFixed(2)}%`;
-      const bg = colorMap[h.symbol?.toUpperCase()] || "#0ea5e9";
 
       card.innerHTML = `
         <div class="dash-asset-top">
           <div class="dash-asset-name">
-            <div class="dash-asset-icon" style="background:${bg}">${h.symbol
-              .toUpperCase()
-              .slice(0, 3)}</div>
+            <div class="dash-asset-icon" style="background:${bg}">${symbol.slice(
+              0,
+              3
+            )}</div>
             <div>
-              <div>${h.label}</div>
-              <div class="dash-asset-value">${h.amount} ${h.symbol.toUpperCase()}</div>
+              <div>${coin.name || holding?.label || symbol}</div>
+              <div class="dash-asset-value">${amount.toFixed(8)} ${symbol}</div>
             </div>
           </div>
-          <div class="dash-asset-price">${formatCurrency(h.price || 0)}</div>
+          <div class="dash-asset-price">${formatCurrency(price)}</div>
         </div>
         <div class="dash-asset-row">
-          <div class="dash-asset-value">=${formatCurrency(h.value || 0)}</div>
+          <div class="dash-asset-value">=${formatCurrency(value || 0)}</div>
           <div class="dash-asset-change ${changeClass}">${changeLabel}</div>
         </div>
       `;
 
       holdingsGrid.appendChild(card);
     });
-  };
+  }
 }
 
 // Logout handler
@@ -249,5 +270,99 @@ document.addEventListener("DOMContentLoaded", async () => {
   // 3. Populate UI
   populateDashboard(user, portfolio);
   setupLogout();
+  setupActionModals();
 });
+
+function setupActionModals() {
+  const modal = document.getElementById("dash-action-modal");
+  const modalTitle = document.getElementById("dash-action-title");
+  const modalList = document.getElementById("dash-action-list");
+  const modalClose = document.querySelector(".dash-action-close");
+  const overlay = document.querySelector(".dash-action-overlay");
+  const amountInput = document.getElementById("dash-action-amount");
+  const confirmBtn = document.getElementById("dash-action-confirm");
+
+  const actionButtons = document.querySelectorAll("[data-action]");
+  if (!modal || !modalTitle || !modalList || !actionButtons.length) return;
+
+  let currentAction = null;
+  let selectedAsset = null;
+
+  function openModal(action) {
+    currentAction = action;
+    selectedAsset = null;
+    modalTitle.textContent = `Select Asset to ${action}`;
+    amountInput.value = "";
+    renderList();
+    modal.classList.add("open");
+    if (overlay) overlay.classList.add("open");
+  }
+
+  function closeModal() {
+    modal.classList.remove("open");
+    if (overlay) overlay.classList.remove("open");
+  }
+
+  function renderList() {
+    modalList.innerHTML = "";
+    const data = cachedMarket.length ? cachedMarket : [];
+    if (!data.length) {
+      modalList.innerHTML =
+        "<p style=\"padding:1rem;\">No assets loaded yet. Try again in a moment.</p>";
+      return;
+    }
+    data.forEach((coin) => {
+      const row = document.createElement("button");
+      row.className = "dash-action-asset";
+      row.type = "button";
+      row.innerHTML = `
+        <div>
+          <div class="dash-action-asset-name">${coin.name}</div>
+          <div class="dash-action-asset-symbol">${coin.symbol.toUpperCase()}</div>
+        </div>
+        <div class="dash-action-asset-price">${formatCurrency(
+          coin.current_price || 0
+        )}</div>
+      `;
+      row.addEventListener("click", () => {
+        selectedAsset = coin;
+        const rows = modalList.querySelectorAll(".dash-action-asset");
+        rows.forEach((r) => r.classList.remove("selected"));
+        row.classList.add("selected");
+      });
+      modalList.appendChild(row);
+    });
+  }
+
+  actionButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      openModal(btn.dataset.action);
+    });
+  });
+
+  if (modalClose) modalClose.addEventListener("click", closeModal);
+  if (overlay) overlay.addEventListener("click", closeModal);
+
+  if (confirmBtn) {
+    confirmBtn.addEventListener("click", () => {
+      if (!selectedAsset) {
+        alert("Select an asset first.");
+        return;
+      }
+      const amt = parseFloat(amountInput.value || "0");
+      if (!amt || amt <= 0) {
+        alert("Enter an amount greater than zero.");
+        return;
+      }
+      alert(
+        `Demo ${currentAction} request for ${amt} ${selectedAsset.symbol.toUpperCase()} submitted.`
+      );
+      closeModal();
+    });
+  }
+
+  document.addEventListener("keyup", (e) => {
+    if (e.key === "Escape") closeModal();
+  });
+}
 
