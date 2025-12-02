@@ -1,4 +1,6 @@
-const API_BASE = "http://localhost:4000";
+const API_BASE =
+  window.API_BASE ||
+  "https://quantum-ledger-org.onrender.com"; // backend base URL (prod); override by setting window.API_BASE before script loads
 const COINGECKO_URL =
   "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin,ethereum,tether,solana&order=market_cap_desc&per_page=4&page=1&sparkline=false";
 

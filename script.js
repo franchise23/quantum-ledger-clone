@@ -1,7 +1,9 @@
 // Simple live crypto price loader using CoinGecko public API
 // No API key needed for basic use
 
-const API_BASE = "http://localhost:4000"; // backend base URL
+const API_BASE =
+  window.API_BASE ||
+  "https://quantum-ledger-org.onrender.com"; // backend base URL (prod); override by setting window.API_BASE before script loads
 
 async function loadPrices() {
   const tbody = document.getElementById("price-rows");
