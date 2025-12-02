@@ -9,22 +9,12 @@ const app = express();
 // Config
 const PORT = process.env.PORT || 4000;
 const JWT_SECRET = process.env.JWT_SECRET || "dev_fallback_secret";
-const ALLOWED_ORIGINS = [
-  "http://127.0.0.1:5500",
-  "http://localhost:5500",
-  "https://franchise23.github.io",
-  "https://franchise23.github.io/quantum-ledger-clone",
-];
-
-// Allow your frontend origins
+// Allow your frontend origins (relaxed for demo; tighten for production)
 app.use(
   cors({
-    origin: (origin, cb) => {
-      if (!origin) return cb(null, true); // allow curl/postman
-      if (ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
-      return cb(new Error("Not allowed by CORS"));
-    },
+    origin: true, // reflect request origin
     credentials: false,
+    optionsSuccessStatus: 200,
   })
 );
 app.use(express.json());
